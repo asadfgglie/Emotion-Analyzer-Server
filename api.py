@@ -8,7 +8,9 @@ from transformers import pipeline, Pipeline
 from typing_extensions import Optional, Union
 
 from schema import AnalyzeRequest, AnalyzeResponse
+from googletrans import Translator
 
+translator = Translator()
 app = fastapi.FastAPI()
 pipe: Optional[Pipeline] = None
 warnings.filterwarnings(action='ignore', category=UserWarning, message='Length of IterableDataset')
@@ -18,9 +20,18 @@ warnings.filterwarnings(action='ignore', category=UserWarning, message='Length o
 async def analyze(request: AnalyzeRequest):
     logging.info('start analyze...')
     t1 = time.time()
-    r = pipe(**request.model_dump())
-    logging.info(f'time cost: {time.time() - t1}')
-    return r
+    old_seq = request.sequences
+    request.sequences = translator.translate(request.sequences).text if isinstance(request.sequences, str) else [trans.text for trans in translator.translate(request.sequences)]
+    logging.info(f'translate text: {old_seq} -> {request.sequences}')
+    logging.info(f'translate time: {time.time() - t1}')
+    response = pipe(**request.model_dump())
+    if isinstance(old_seq, list):
+        for i, result in enumerate(response):
+            result['sequence'] = old_seq[i]
+    else:
+        response['sequence'] = old_seq
+    logging.info(f'total time cost: {time.time() - t1}')
+    return response
 
 
 if __name__ == '__main__':
