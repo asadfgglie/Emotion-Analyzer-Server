@@ -22,3 +22,7 @@ class AnalyzeTestResponse(BaseModel):
     inference_time: float
     translate_time: float
     total_time: float
+    use_translator: bool
+    use_torch_compiler: bool
+    name_model: str
+    dtype_model: str

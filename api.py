@@ -48,7 +48,11 @@ async def analyze(request: AnalyzeRequest):
 
     if request.return_testing_data:
         return AnalyzeTestResponse(response=response, inference_time=t3 - t2,
-                                   translate_time=t2 - t1, total_time=t3 - t1)
+                                   translate_time=t2 - t1, total_time=t3 - t1,
+                                   use_translator=config.USE_TRANSLATOR,
+                                   use_torch_compiler=config.USE_TORCH_COMPILE,
+                                   dtype_model=str(config.MODEL_DTYPE),
+                                   name_model=config.MODEL_NAME)
     else:
         return response
 
