@@ -12,8 +12,7 @@ dataset_name = 'asadfgglie/BanBan_2024-10-17-facial_expressions'
 session = requests.session()
 
 # warm up connection
-session.post(url, json=AnalyzeRequest(sequences='hello, world!',
-                                      candidate_labels=['興奮', '難過', '開心', '自然']).model_dump())
+session.post(url, json=AnalyzeRequest(sequences='hello, world!', candidate_labels=['興奮']).model_dump())
 
 
 class Timer:
