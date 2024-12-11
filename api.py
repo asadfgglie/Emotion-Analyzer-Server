@@ -108,4 +108,10 @@ if __name__ == '__main__':
     pipe(**dict(sequences=["你是在跟我開玩笑嗎?你這該死的傢伙，我要宰了你!"],
          candidate_labels=["疑惑"], hypothesis_template="這是一句會使用{}表情說出來的話。"))
 
+    allocated_memory = torch.cuda.memory_allocated() / (1024 ** 2)  # 以 MB 為單位
+    reserved_memory = torch.cuda.memory_reserved() / (1024 ** 2)  # 以 MB 為單位
+
+    logging.info(f"Allocated Memory: {allocated_memory:.2f} MB")
+    logging.info(f"Reserved Memory: {reserved_memory:.2f} MB")
+
     uvicorn.run(app, host='0.0.0.0', port=20823)
