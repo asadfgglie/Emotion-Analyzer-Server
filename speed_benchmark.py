@@ -7,7 +7,7 @@ from datasets import load_dataset
 import config
 from schema import AnalyzeRequest, AnalyzeTestResponse
 
-url = 'http://26.171.83.203:20823/analyze'
+url = 'http://localhost:20823/analyze'
 dataset_name = 'asadfgglie/BanBan_2024-10-17-facial_expressions'
 session = requests.session()
 
