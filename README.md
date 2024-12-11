@@ -1,19 +1,11 @@
-# 情感分類伺服器
+# Emotion Analyzer Server
+
+**Zero-shot Text Classifier RESTFUL Server**
 
 ---
 
-初次安裝點擊`setup.bat`進行安裝即可
+At first time start server, use `setup.bat` to install requirements.
 
-安裝完成後只需要點擊`start.bat`來啟動就行
+After install requirements, use `start.bat` to start the server.
 
-目前繁體中文模型還在訓練中
-
-因此只能先用Google翻譯將文本翻譯成英文
-
-如果使用過程中遇到500系列的狀態碼錯誤
-
-那表示你的IP被Google封鎖了
-
-這我沒辦法幫你
-
-請自行斟酌使用
+All server's endpoint can check at `http://localhost:20823/docs`
