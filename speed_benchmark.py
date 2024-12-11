@@ -4,6 +4,7 @@ import numpy as np
 import requests
 from datasets import load_dataset
 
+import config
 from schema import AnalyzeRequest, AnalyzeTestResponse
 
 url = 'http://26.171.83.203:20823/analyze'
@@ -102,6 +103,7 @@ print(f"""
 ========= Speed testing result =========
 dataset name:           {dataset_name}
 dataset size:           {test_dataset.shape}
+model dtype:            {config.MODEL_DTYPE}
 translate time:         {timer.mean_translate_time:.4f} +- {timer.std_translate_time:.4f}
 inference time:         {timer.mean_inference_time:.4f} +- {timer.std_inference_time:.4f}
 total server time:      {timer.mean_total_time:.4f} +- {timer.std_total_time:.4f}
