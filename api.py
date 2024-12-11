@@ -53,7 +53,7 @@ async def analyze(request: AnalyzeRequest):
             data['scores'] /= data['scores'].sum()
         else:
             data['scores'] *= weights_sum
-        print(data['scores'].sum())
+
         ls = sorted(zip(data['labels'], data['scores']), key=lambda x: x[-1], reverse=True)
         data['labels'] = []
         data['scores'] = []
