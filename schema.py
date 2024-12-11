@@ -21,6 +21,8 @@ class AnalyzeRequest(BaseModel):
                     if i <= 0:
                         raise ValueError('weight should great than zero!')
 
+        return self
+
 
 class AnalyzeResponse(BaseModel):
     sequence: str
