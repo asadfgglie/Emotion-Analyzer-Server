@@ -4,13 +4,16 @@ import time
 import warnings
 
 import fastapi
+from fastapi import HTTPException
+from pydantic import ValidationError
 import numpy as np
 import torch.cuda
 from transformers import pipeline, Pipeline, AutoModelForSequenceClassification, AutoTokenizer
 from typing_extensions import Optional, Union
 
 import config
-from schema import AnalyzeRequest, AnalyzeResponse, AnalyzeTestResponse
+from schema import (AnalyzeRequest, AnalyzeResponse, AnalyzeTestResponse, SystemOneRequest, SystemOneResponse,
+                    SystemOneAnswer, NoulQuestion)
 
 if config.USE_TRANSLATOR:
     from googletrans import Translator
@@ -26,16 +29,16 @@ async def analyze(request: AnalyzeRequest):
     logging.info('start analyze...')
     old_seq = request.sequences
 
-    t1 = time.time()
+    t1 = time.monotonic()
     if config.USE_TRANSLATOR:
         request.sequences = translator.translate(request.sequences).text if isinstance(request.sequences, str) else [trans.text for trans in translator.translate(request.sequences)]
-        t2 = time.time()
+        t2 = time.monotonic()
         logging.info(f'translate text: {old_seq} -> {request.sequences}')
         logging.info(f'translate time: {t2 - t1}')
     else:
         t2 = t1
     response = pipe(**request.model_dump())
-    t3 = time.time()
+    t3 = time.monotonic()
 
     def rerank_by_weight(data):
         if request.weights is None:
@@ -84,6 +87,39 @@ async def analyze(request: AnalyzeRequest):
                                    name_model=config.MODEL_NAME)
     else:
         return response
+
+
+@app.post('/v1/systemone', response_model=SystemOneResponse)
+async def system_one(request: SystemOneRequest):
+    """
+    參考 TypeSafe `systemone` 的 API 設計。每個 question 都轉成一次 `/analyze` 呼叫：
+    choice -> multi_label=False，score -> multi_label=True，noul -> 單一標籤的 NLI（entailment vs contradiction）。
+    """
+    answers: dict[str, SystemOneAnswer] = {}
+
+    for qid, q in request.questions.items():
+        if isinstance(q, NoulQuestion):
+            kwargs = dict(candidate_labels=[q.instructions.format(c) for c in q.criteria.values()], hypothesis_template='{}', multi_label=True)
+        else:
+            kwargs = dict(candidate_labels=[(c if isinstance(q.criteria, list) else (f'{c}:{q.criteria[c]}' if q.criteria[c] is not None else c)) for c in q.criteria],
+                          multi_label=q.type == 'score', weights=q.weights, hypothesis_template=q.instructions)
+
+        try:
+            analyze_request = AnalyzeRequest(sequences=request.state, **kwargs)
+        except ValidationError as e:
+            raise HTTPException(status_code=422, detail=f'questions.{qid}: {e.errors(include_url=False, include_context=False)}')
+
+        result = await analyze(analyze_request)
+
+        if isinstance(q, NoulQuestion):
+            p = result['response']['scores'][result['response']['labels'].index(q.instructions.format(q.criteria['true']))]
+            answers[qid] = SystemOneAnswer(type='noul', noul=p, confidence=max(p, 1 - p))
+        else:
+            probs = {l: float(s) for l, s in zip(result['labels'], result['scores'])}
+            best = result['labels'][0]
+            answers[qid] = SystemOneAnswer(type=q.type, choice=best, probabilities=probs, confidence=probs[best])
+
+    return SystemOneResponse(model=request.model, answers=answers)
 
 
 if __name__ == '__main__':

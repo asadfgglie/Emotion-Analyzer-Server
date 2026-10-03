@@ -7,7 +7,7 @@ from datasets import load_dataset
 import config
 from schema import AnalyzeRequest, AnalyzeTestResponse
 
-url = 'http://localhost:20823/analyze'
+url = 'http://127.0.0.1:20823/analyze'
 dataset_name = 'asadfgglie/BanBan_2024-10-17-facial_expressions'
 session = requests.session()
 
@@ -94,9 +94,9 @@ timer = Timer()
 for ex in tqdm(test_dataset, total=test_dataset.shape[0]):
     ex['candidate_labels'] += ex['not_candidate_labels']
     ex.pop('not_candidate_labels')
-    t1 = time.time()
+    t1 = time.monotonic()
     response = session.post(url, json=AnalyzeRequest(**ex, return_testing_data=True).model_dump()).json()
-    timer.add_data(AnalyzeTestResponse(**response), time.time() - t1, len(ex['candidate_labels']))
+    timer.add_data(AnalyzeTestResponse(**response), time.monotonic() - t1, len(ex['candidate_labels']))
 
 print(f"""
 ========= Speed testing result =========
