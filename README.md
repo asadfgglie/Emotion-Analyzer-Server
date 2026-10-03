@@ -31,7 +31,7 @@ It does **not** call TypeSafe; every question is converted into one `/analyze` r
 |--------|-------------------------------|----------|
 | `choice` | `multi_label=False` (softmax over the criteria). `criteria` is `{label: description or null}`. | `choice`, `probabilities` (sorted desc), `confidence` |
 | `score` | `multi_label=True` (independent score per label). `criteria` is a list of labels. | `choice`, `probabilities` (sorted desc), `confidence` |
-| `noul` | `multi_label=True` with two labels, one per `criteria["true"]` / `criteria["false"]`. | `noul` (score of the `true` label), `confidence` |
+| `noul` | `multi_label=True` with two labels, one per `criteria["true"]` / `criteria["false"]`. | `noul` (score of the `true` label), `confidence` (larger of the two labels' scores divided by their sum) |
 
 For `choice` and `score`, `instructions` is the hypothesis template and must contain `{}` (default: `這是一句會使用{}表情說出來的話。`).
 `weights` is optional and works like `/analyze`'s `weights`.

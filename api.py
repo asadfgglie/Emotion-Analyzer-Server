@@ -112,8 +112,10 @@ async def system_one(request: SystemOneRequest):
         result = await analyze(analyze_request)
 
         if isinstance(q, NoulQuestion):
-            p = result['response']['scores'][result['response']['labels'].index(q.instructions.format(q.criteria['true']))]
-            answers[qid] = SystemOneAnswer(type='noul', noul=p, confidence=max(p, 1 - p))
+            scores = dict(zip(result['labels'], result['scores']))
+            p = float(scores[q.instructions.format(q.criteria['true'])])
+            p_false = float(scores[q.instructions.format(q.criteria['false'])])
+            answers[qid] = SystemOneAnswer(type='noul', noul=p, confidence=max(p, p_false) / (p + p_false))
         else:
             probs = {l: float(s) for l, s in zip(result['labels'], result['scores'])}
             best = result['labels'][0]
@@ -134,7 +136,7 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         model = model.to('cuda')
         if config.USE_TORCH_COMPILE:
-            model = torch.compile(model, backend="cudagraphs")
+            model = torch.compile(model, backend="cudagraphs", dynamic=True)
 
     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
     pipe = pipeline("zero-shot-classification", model=model, tokenizer=tokenizer,
